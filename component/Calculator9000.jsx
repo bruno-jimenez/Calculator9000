@@ -1,0 +1,100 @@
+import {useState} from "react";
+
+/* Components */
+import {BeautifulScreen} from "./BeautifulScreen.jsx";
+import {NumberButton} from "./NumberButton.jsx";
+import {OperatorButton} from "./OperatorButton.jsx";
+import {ResetOperation} from "./ResetOperation.jsx";
+import {ItSOverNineThousand} from "./ItSOverNineThousand.jsx";
+
+
+
+export function Calculator9000()
+{
+    const [expression, setExpression] = useState([]);
+    const [result, setResult] = useState(0);
+    const [history, setHistory] = useState([]);
+    const [errorF, setErrorF] = useState(false);
+    const [messageError, setMessageError] = useState("");
+
+    const handleNumberClick = (number) => {
+        if (number === "." && expression.includes(".")) {
+            return;
+        }
+        if (expression.length > 0 && expression[expression.length - 1] === "." && number === ".") {
+            return;
+        }
+        setExpression([...expression, number]);
+        HandleError(false);
+        HandeleMessageError("");
+    };
+
+    const handleOperatorClick = () => {
+        if (expression.length === 0) {
+            console.log("empty expression");
+            HandleError(true);
+            HandeleMessageError("empty expression");
+        } else if (expression[0] === "+" || expression[0] === "-" || expression[0] === "*" || expression[0] === "/") {
+            HandleError(true);
+            HandeleMessageError("expression has only operator");
+        } else if (expression[0] === "." || expression[expression.length - 1] === ".") {
+            HandleError(true);
+            HandeleMessageError("expression has only operator");
+        } else {
+            for (let i = 0; i < expression.length; i++) {
+                if (expression[i] === "+" || expression[i] === "-" || expression[i] === "*" || expression[i] === "/") {
+                    if (expression[i + 1] === "+" || expression[i + 1] === "-" || expression[i + 1] === "*" || expression[i + 1] === "/") {
+                        HandleError(true);
+                        HandeleMessageError("expression has only operator");
+                        return;
+                    }
+                }
+            }
+            HandleError(false);
+            HandeleMessageError("");
+            const expressionString = expression.join("");
+            try {
+                const result = eval(expressionString);
+                setResult(result);    
+                const newEntry = { expression: expressionString, result: result };
+                setHistory(history.concat(newEntry));
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
+    const handleReset = () => {
+        setErrorF(false);
+        setMessageError("");
+        setExpression([]);
+        setResult(0);
+    };
+    const DeleteClick = () => {
+        setExpression(expression.slice(0, -1));
+    };
+    const HandleError = (errorF) => {
+        setErrorF(errorF);
+    };
+    const HandeleMessageError = (messageError) => {
+        setMessageError(messageError);
+    }
+    return(
+        <div className="w-screen h-screen flex justify-center items-center">
+            <div className="w-[90%] sm:w-1/2 lg:w-1/4 rounded-[10px] border border-[#11131c] p-2">
+                <BeautifulScreen expression={expression} result={result} errorF={errorF} messageError={messageError}/>
+                <ItSOverNineThousand result={result}/>
+                <div className="flex justify-between space-x-3 pt-2">
+                    <div className="flex flex-col w-full h-full">
+                        <div className="flex items-center">
+                            <ResetOperation resetClick={handleReset} DeleteClick={DeleteClick}/>
+                        </div>
+                        <NumberButton NumberClick={handleNumberClick}/>
+                    </div>
+                    <div className="flex w-1/3">
+                        <OperatorButton OperatorClick={handleNumberClick} handleEqual={handleOperatorClick}/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
